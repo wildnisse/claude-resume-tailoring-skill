@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/wildnisse/claude-resume-builder-skill/schemas/resume-content.schema.json",
+  "$id": "https://github.com/wildnisse/claude-resume-tailoring-skill/schemas/resume-content.schema.json",
   "title": "Resume Content",
   "description": "Structured input to resume_builder.py. Replaces per-application Python build scripts.",
   "type": "object",

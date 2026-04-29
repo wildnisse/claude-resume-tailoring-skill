@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# claude-resume-builder-skill installer
+# claude-resume-tailoring-skill installer
 #
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/wildnisse/claude-resume-builder-skill/main/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/wildnisse/claude-resume-tailoring-skill/main/install.sh | bash
 #
 # Or, with environment overrides for non-interactive use:
 #   SKILL_USER_NAME="Jane Doe" SKILL_DATA_DIR="$HOME/Documents/jane-jobsearch" bash install.sh
 
 set -euo pipefail
 
-SKILL_REPO_URL="${SKILL_REPO_URL:-https://github.com/wildnisse/claude-resume-builder-skill.git}"
+SKILL_REPO_URL="${SKILL_REPO_URL:-https://github.com/wildnisse/claude-resume-tailoring-skill.git}"
 SKILL_REPO_BRANCH="${SKILL_REPO_BRANCH:-main}"
 
 # ── colors ────────────────────────────────────────────────────────────────────
@@ -61,7 +61,7 @@ fi
 
 # ── inputs ────────────────────────────────────────────────────────────────────
 echo ""
-echo "${BOLD}claude-resume-builder-skill installer${RESET}"
+echo "${BOLD}claude-resume-tailoring-skill installer${RESET}"
 echo ""
 
 USER_NAME="${SKILL_USER_NAME:-}"
@@ -148,7 +148,7 @@ EOF
 # ── initial commit ────────────────────────────────────────────────────────────
 info "creating initial commit"
 git add .
-git commit --quiet -m "feat: initial setup with claude-resume-builder-skill"
+git commit --quiet -m "feat: initial setup with claude-resume-tailoring-skill"
 
 # ── done ──────────────────────────────────────────────────────────────────────
 echo ""

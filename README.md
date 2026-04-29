@@ -1,4 +1,4 @@
-# claude-resume-builder-skill
+# claude-resume-tailoring-skill
 
 A multi-agent pipeline for tailoring resumes and cover letters to specific job descriptions, designed to run inside Claude (Claude Code, Claude Desktop, or remote agents).
 
@@ -20,7 +20,7 @@ Given a JD, the pipeline:
 ## Install
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/wildnisse/claude-resume-builder-skill/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/wildnisse/claude-resume-tailoring-skill/main/install.sh | bash
 ```
 
 The installer will:
@@ -41,7 +41,7 @@ cd ~/Documents/myname-jobsearch
 git init
 
 # Add the skill as a submodule
-git submodule add https://github.com/wildnisse/claude-resume-builder-skill.git skill
+git submodule add https://github.com/wildnisse/claude-resume-tailoring-skill.git skill
 
 # Copy starter templates
 cp skill/templates/experience-kb.template.json experience-kb.json

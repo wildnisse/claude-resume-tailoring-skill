@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/wildnisse/claude-resume-builder-skill/schemas/ats-score.schema.json",
+  "$id": "https://github.com/wildnisse/claude-resume-tailoring-skill/schemas/ats-score.schema.json",
   "title": "ATS Score",
   "description": "Output of the ats-scorer agent. 100-point rubric across 5 dimensions.",
   "type": "object",

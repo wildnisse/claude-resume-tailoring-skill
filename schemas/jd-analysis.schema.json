@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/wildnisse/claude-resume-builder-skill/schemas/jd-analysis.schema.json",
+  "$id": "https://github.com/wildnisse/claude-resume-tailoring-skill/schemas/jd-analysis.schema.json",
   "title": "JD Analysis",
   "description": "Structured analysis of a job description, output of the jd-analyzer agent.",
   "type": "object",

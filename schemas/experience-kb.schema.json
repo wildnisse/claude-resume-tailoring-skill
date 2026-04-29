@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/wildnisse/claude-resume-builder-skill/schemas/experience-kb.schema.json",
+  "$id": "https://github.com/wildnisse/claude-resume-tailoring-skill/schemas/experience-kb.schema.json",
   "title": "Experience Knowledge Base",
   "description": "User's verified career facts. Source of truth for resume tailoring.",
   "type": "object",

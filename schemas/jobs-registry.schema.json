@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/wildnisse/claude-resume-builder-skill/schemas/jobs-registry.schema.json",
+  "$id": "https://github.com/wildnisse/claude-resume-tailoring-skill/schemas/jobs-registry.schema.json",
   "title": "Jobs Registry",
   "description": "Master registry of all applications. Top-level structure of jobs.json.",
   "type": "object",

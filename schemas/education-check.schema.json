@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/wildnisse/claude-resume-builder-skill/schemas/education-check.schema.json",
+  "$id": "https://github.com/wildnisse/claude-resume-tailoring-skill/schemas/education-check.schema.json",
   "title": "Education Requirements Check",
   "description": "Output of the education-requirements-check agent. Flags strong degree signals from the JD.",
   "type": "object",
