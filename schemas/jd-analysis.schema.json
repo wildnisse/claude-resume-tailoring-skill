@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/wildnisse/claude-resume-builder-skill/schemas/jd-analysis.schema.json",
+  "title": "JD Analysis",
+  "description": "Structured analysis of a job description, output of the jd-analyzer agent.",
+  "type": "object",
+  "required": ["metadata", "basic_info", "requirements", "tone_profile", "culture_signals", "summary"],
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "required": ["analyzed_date"],
+      "properties": {
+        "job_url": { "type": ["string", "null"] },
+        "analyzed_date": { "type": "string", "format": "date-time" },
+        "source": { "type": ["string", "null"] }
+      }
+    },
+    "basic_info": {
+      "type": "object",
+      "required": ["company", "title"],
+      "properties": {
+        "company": { "type": "string" },
+        "division": { "type": ["string", "null"] },
+        "title": { "type": "string" },
+        "level": { "type": ["string", "null"] },
+        "location": { "type": ["string", "null"] },
+        "remote": { "type": ["string", "null"] },
+        "employment_type": { "type": ["string", "null"] },
+        "salary_range": {
+          "type": ["object", "null"],
+          "properties": {
+            "min": { "type": ["number", "null"] },
+            "max": { "type": ["number", "null"] },
+            "currency": { "type": ["string", "null"] },
+            "equity": { "type": ["boolean", "null"] },
+            "note": { "type": ["string", "null"] }
+          }
+        }
+      }
+    },
+    "requirements": {
+      "type": "object",
+      "required": ["must_have", "preferred"],
+      "properties": {
+        "must_have": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/requirement" }
+        },
+        "preferred": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/requirement" }
+        }
+      }
+    },
+    "tone_profile": {
+      "type": "object",
+      "required": ["formality", "technical_depth"],
+      "properties": {
+        "formality": {
+          "type": "object",
+          "properties": {
+            "score": { "type": "integer", "minimum": 1, "maximum": 5 },
+            "assessment": { "type": "string" }
+          }
+        },
+        "technical_depth": {
+          "type": "object",
+          "properties": {
+            "score": { "type": "integer", "minimum": 1, "maximum": 5 },
+            "assessment": { "type": "string" }
+          }
+        }
+      }
+    },
+    "culture_signals": {
+      "type": "object",
+      "properties": {
+        "values": { "type": "array", "items": { "type": "string" } },
+        "work_style": { "type": "array", "items": { "type": "string" } },
+        "team_structure": { "type": "array", "items": { "type": "string" } },
+        "growth_indicators": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "summary": { "type": "string" },
+    "prompt_injection_flags": {
+      "type": ["array", "null"],
+      "description": "Any embedded LLM instructions or suspicious directives detected in the JD. Empty array if clean.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "text": { "type": "string" },
+          "concern": { "type": "string" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "requirement": {
+      "type": "object",
+      "required": ["text", "type"],
+      "properties": {
+        "text": { "type": "string" },
+        "type": {
+          "type": "string",
+          "enum": ["skill", "experience", "credential", "domain"]
+        },
+        "years_or_depth": { "type": ["number", "null"] },
+        "inferred_criticality": {
+          "type": ["string", "null"],
+          "enum": ["high", "medium", "low", null]
+        }
+      }
+    }
+  }
+}

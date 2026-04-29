@@ -1,0 +1,72 @@
+{
+  "metadata": {
+    "version": "1.0",
+    "last_updated": "REPLACE_WITH_TODAY",
+    "description": "Verified experience knowledge base. Source of truth for resume tailoring. Update this file whenever new details are surfaced during tailoring sessions.",
+    "notes": [
+      "Add free-form notes here as you build out the KB. Useful for: entity clarifications (e.g. multiple consulting entities), title corrections, layoff context for short tenures, etc."
+    ]
+  },
+
+  "personal_info": {
+    "name": "Your Full Name",
+    "address": "City, State",
+    "phone": "555-555-5555",
+    "email": "you@example.com",
+    "linkedin_url": "https://www.linkedin.com/in/your-handle",
+    "languages": ["English"]
+  },
+
+  "education": [
+    {
+      "institution": "Your University",
+      "degree": "Bachelor of Science",
+      "field": "Computer Science",
+      "graduation_year": 2010
+    }
+  ],
+
+  "roles": [
+    {
+      "id": "example-role-2020-present",
+      "company": "Example Company",
+      "title": "Senior Engineering Manager",
+      "location": "Remote — City, State",
+      "dates": {
+        "start": "January 2020",
+        "end": "Present",
+        "duration": "~5 years"
+      },
+      "employment_type": "W2 (direct employee)",
+      "team_size": {
+        "ftes": 12,
+        "engineering_managers": 2
+      },
+      "domains": ["Domain A", "Domain B"],
+      "accomplishments": [
+        "Led the migration from monolith to microservices architecture",
+        "Grew the engineering team from 4 to 12 with low attrition",
+        "Shipped flagship feature X that drove Y measurable outcome"
+      ],
+      "technologies": {
+        "backend": ["Java", "Node.js"],
+        "frontend": ["React"],
+        "cloud": ["AWS", "Kubernetes"],
+        "database": ["Postgres"],
+        "messaging": ["Kafka", "SQS"]
+      },
+      "compliance": {
+        "frameworks": ["SOC2"],
+        "details": ["SOC2 Type II compliant onboarding flows"]
+      },
+      "global_distribution": {
+        "regions": ["US", "India"],
+        "note": "Distributed team with US-based leadership and India-based engineering"
+      },
+      "vendor_management": null,
+      "budget": null
+    }
+  ],
+
+  "tailoring_session_notes": []
+}

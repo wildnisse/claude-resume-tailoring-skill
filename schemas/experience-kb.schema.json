@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/wildnisse/claude-resume-builder-skill/schemas/experience-kb.schema.json",
+  "title": "Experience Knowledge Base",
+  "description": "User's verified career facts. Source of truth for resume tailoring.",
+  "type": "object",
+  "required": ["metadata", "personal_info", "roles"],
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "required": ["version", "last_updated"],
+      "properties": {
+        "version": { "type": "string" },
+        "last_updated": { "type": "string" },
+        "description": { "type": "string" },
+        "notes": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Free-form notes about the KB itself, corrections, entity clarifications, etc."
+        }
+      }
+    },
+    "personal_info": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string" },
+        "address": { "type": ["string", "null"] },
+        "phone": { "type": ["string", "null"] },
+        "email": { "type": ["string", "null"] },
+        "linkedin_url": { "type": ["string", "null"] },
+        "languages": { "type": "array", "items": { "type": "string" } },
+        "linkedin_note": { "type": ["string", "null"] }
+      }
+    },
+    "education": {
+      "type": "array",
+      "description": "Formal education entries. Used by the education-requirements-check agent.",
+      "items": {
+        "type": "object",
+        "required": ["institution", "degree"],
+        "properties": {
+          "institution": { "type": "string" },
+          "degree": {
+            "type": "string",
+            "description": "e.g. 'Bachelor of Science', 'Master of Science', 'PhD'"
+          },
+          "field": { "type": ["string", "null"] },
+          "graduation_year": { "type": ["number", "null"] },
+          "notes": { "type": ["string", "null"] }
+        }
+      }
+    },
+    "roles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "company", "title", "dates"],
+        "properties": {
+          "id": { "type": "string" },
+          "company": { "type": "string" },
+          "title": { "type": "string" },
+          "title_correction_note": { "type": ["string", "null"] },
+          "entity_note": { "type": ["string", "null"] },
+          "location": { "type": ["string", "null"] },
+          "dates": {
+            "type": "object",
+            "properties": {
+              "start": { "type": "string" },
+              "end": { "type": "string" },
+              "duration": { "type": ["string", "null"] },
+              "note": { "type": ["string", "null"] }
+            }
+          },
+          "employment_type": { "type": ["string", "null"] },
+          "team_size": {},
+          "domains": { "type": "array", "items": { "type": "string" } },
+          "accomplishments": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "technologies": {},
+          "compliance": {},
+          "global_distribution": {},
+          "consulting_engagements": { "type": "array" },
+          "products": { "type": "array" },
+          "other_work": { "type": "array", "items": { "type": "string" } },
+          "ai_development_practices": { "type": "array", "items": { "type": "string" } },
+          "vendor_management": {},
+          "payments_detail": { "type": ["string", "null"] },
+          "budget": { "type": ["number", "string", "null"] }
+        },
+        "additionalProperties": true
+      }
+    },
+    "tailoring_session_notes": {
+      "type": "array",
+      "description": "Append-only log of new facts surfaced during tailoring sessions.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "date": { "type": "string" },
+          "session_context": { "type": "string" },
+          "new_facts": { "type": "array", "items": { "type": "string" } }
+        }
+      }
+    }
+  }
+}

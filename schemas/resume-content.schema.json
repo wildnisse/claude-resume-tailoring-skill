@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/wildnisse/claude-resume-builder-skill/schemas/resume-content.schema.json",
+  "title": "Resume Content",
+  "description": "Structured input to resume_builder.py. Replaces per-application Python build scripts.",
+  "type": "object",
+  "required": ["header", "summary", "highlights", "experience", "education"],
+  "properties": {
+    "header": {
+      "type": "object",
+      "required": ["name"],
+      "properties": {
+        "name": { "type": "string" },
+        "phone": { "type": ["string", "null"] },
+        "email": { "type": ["string", "null"] },
+        "linkedin": { "type": ["string", "null"] },
+        "location": { "type": ["string", "null"] }
+      }
+    },
+    "summary": {
+      "type": "string",
+      "description": "The professional summary paragraph. Single paragraph, no bullets."
+    },
+    "highlights": {
+      "type": "object",
+      "description": "Three-column highlights section. Each column has a header and 3-5 bullets.",
+      "required": ["columns"],
+      "properties": {
+        "columns": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "object",
+            "required": ["header", "bullets"],
+            "properties": {
+              "header": { "type": "string" },
+              "bullets": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "experience": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["dates", "company_location", "title", "bullets"],
+        "properties": {
+          "dates": { "type": "string", "description": "e.g. 'May 2023 – June 2024'" },
+          "company_location": { "type": "string", "description": "e.g. 'Swiftly Systems, Inc, Remote – Boston, MA'" },
+          "title": { "type": "string" },
+          "bullets": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "subsection": {
+            "type": ["object", "null"],
+            "description": "Optional sub-engagement under this role (e.g. a fractional CTO client under a consulting umbrella).",
+            "properties": {
+              "title": { "type": "string" },
+              "bullets": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "education": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["institution", "degree"],
+        "properties": {
+          "institution": { "type": "string" },
+          "degree": { "type": "string" }
+        }
+      }
+    },
+    "style": {
+      "type": ["object", "null"],
+      "description": "Optional style overrides. If absent, uses the skill defaults.",
+      "properties": {
+        "font": { "type": "string", "default": "Garamond" },
+        "font_size_pt": { "type": "number", "default": 10 },
+        "name_size_pt": { "type": "number", "default": 22 },
+        "summary_shading": { "type": "string", "default": "EDEDED" }
+      }
+    }
+  }
+}

@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/wildnisse/claude-resume-builder-skill/schemas/ats-score.schema.json",
+  "title": "ATS Score",
+  "description": "Output of the ats-scorer agent. 100-point rubric across 5 dimensions.",
+  "type": "object",
+  "required": ["candidate_name", "job_title", "company", "analysis_date", "scores", "total_score", "recommendation"],
+  "properties": {
+    "candidate_name": { "type": "string" },
+    "job_title": { "type": "string" },
+    "company": { "type": "string" },
+    "analysis_date": { "type": "string", "format": "date-time" },
+    "resume_version": {
+      "type": "string",
+      "description": "Which resume version was scored (e.g. 'jmresume_v2 (master, untailored)' or 'jmonstad-vp-v1')."
+    },
+    "scores": {
+      "type": "object",
+      "required": ["formatting_structure", "tone_fit_alignment", "hard_requirements_match", "nice_to_haves_differentiation", "overall_fit_recommendation"],
+      "properties": {
+        "formatting_structure": {
+          "type": "object",
+          "properties": {
+            "score": { "type": "integer", "minimum": 0, "maximum": 20 },
+            "assessment": { "type": "string" }
+          }
+        },
+        "tone_fit_alignment": {
+          "type": "object",
+          "properties": {
+            "score": { "type": "integer", "minimum": 0, "maximum": 20 },
+            "assessment": { "type": "string" }
+          }
+        },
+        "hard_requirements_match": {
+          "type": "object",
+          "properties": {
+            "score": { "type": "integer", "minimum": 0, "maximum": 30 },
+            "coverage_percent": { "type": "number", "minimum": 0, "maximum": 100 },
+            "details": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "requirement": { "type": "string" },
+                  "status": { "type": "string", "enum": ["exact", "strong", "partial", "weak", "missing"] },
+                  "evidence": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "nice_to_haves_differentiation": {
+          "type": "object",
+          "properties": {
+            "score": { "type": "integer", "minimum": 0, "maximum": 20 },
+            "assessment": { "type": "string" }
+          }
+        },
+        "overall_fit_recommendation": {
+          "type": "object",
+          "properties": {
+            "score": { "type": "integer", "minimum": 0, "maximum": 10 },
+            "red_flags": { "type": "array", "items": { "type": "string" } },
+            "green_flags": { "type": "array", "items": { "type": "string" } }
+          }
+        }
+      }
+    },
+    "total_score": { "type": "integer", "minimum": 0, "maximum": 100 },
+    "recommendation": {
+      "type": "string",
+      "enum": ["READY_FOR_SUBMISSION", "NEEDS_TAILORING", "WEAK_MATCH"]
+    },
+    "strengths": { "type": "array", "items": { "type": "string" } },
+    "critical_issues": { "type": "array", "items": { "type": "string" } },
+    "priority_fixes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "issue": { "type": "string" },
+          "impact_on_score": { "type": "integer" },
+          "effort": { "type": "string", "enum": ["quick", "medium", "hard"] },
+          "actionable_fix": { "type": "string" }
+        }
+      }
+    },
+    "tailoring_suggestions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "section": { "type": "string" },
+          "suggestion": { "type": "string" },
+          "estimated_point_gain": { "type": "integer" }
+        }
+      }
+    }
+  }
+}

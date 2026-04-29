@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/wildnisse/claude-resume-builder-skill/schemas/education-check.schema.json",
+  "title": "Education Requirements Check",
+  "description": "Output of the education-requirements-check agent. Flags strong degree signals from the JD.",
+  "type": "object",
+  "required": ["analyzed_date", "signals", "verdict"],
+  "properties": {
+    "analyzed_date": { "type": "string", "format": "date-time" },
+    "signals": {
+      "type": "array",
+      "description": "Each occurrence of degree language found in the JD, with quoted text and inferred criticality.",
+      "items": {
+        "type": "object",
+        "required": ["quote", "level", "criticality"],
+        "properties": {
+          "quote": {
+            "type": "string",
+            "description": "Verbatim text from the JD where the degree requirement appears."
+          },
+          "level": {
+            "type": "string",
+            "enum": ["bachelor", "master", "phd", "associate", "any_degree", "other"]
+          },
+          "field": {
+            "type": ["string", "null"],
+            "description": "Field of study if specified (e.g., 'Computer Science', 'Engineering')"
+          },
+          "criticality": {
+            "type": "string",
+            "enum": ["hard_required", "strongly_preferred", "preferred", "mentioned"]
+          },
+          "language_pattern": {
+            "type": ["string", "null"],
+            "description": "Which language pattern matched (e.g., 'must have', 'required', 'preferred', 'or equivalent')"
+          }
+        }
+      }
+    },
+    "verdict": {
+      "type": "object",
+      "required": ["overall_criticality", "user_action_required"],
+      "properties": {
+        "overall_criticality": {
+          "type": "string",
+          "enum": ["hard_required", "strongly_preferred", "preferred", "none"],
+          "description": "The strongest signal across all occurrences."
+        },
+        "user_action_required": {
+          "type": "boolean",
+          "description": "True if the agent must stop and ask the user before proceeding (typically when overall_criticality is hard_required and we don't already know the user has the qualification)."
+        },
+        "reasoning": {
+          "type": "string",
+          "description": "One or two sentences explaining the verdict and what to do next."
+        }
+      }
+    }
+  }
+}

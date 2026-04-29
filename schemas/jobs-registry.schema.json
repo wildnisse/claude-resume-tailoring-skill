@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/wildnisse/claude-resume-builder-skill/schemas/jobs-registry.schema.json",
+  "title": "Jobs Registry",
+  "description": "Master registry of all applications. Top-level structure of jobs.json.",
+  "type": "object",
+  "required": ["schema_version", "applications"],
+  "properties": {
+    "schema_version": { "type": "string", "const": "2.0" },
+    "last_updated": { "type": "string", "format": "date-time" },
+    "master_resume_current": { "type": "string", "description": "Current master resume version, e.g. 'v2'" },
+    "applications": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/application" }
+    }
+  },
+  "$defs": {
+    "application": {
+      "type": "object",
+      "required": ["id", "company", "position_title", "date_added"],
+      "properties": {
+        "id": { "type": "string", "description": "Slug, e.g. 'mainstay-head-engineering-2026'" },
+        "company": { "type": "string" },
+        "company_context": { "type": ["string", "null"] },
+        "position_title": { "type": "string" },
+        "position_level": { "type": ["string", "null"] },
+        "jd_url": { "type": ["string", "null"] },
+        "jd_source": { "type": ["string", "null"] },
+        "date_added": { "type": "string", "format": "date-time" },
+        "job_details": {
+          "type": "object",
+          "properties": {
+            "employment_type": { "type": ["string", "null"] },
+            "location": { "type": ["string", "null"] },
+            "remote_eligible": { "type": ["boolean", "null"] },
+            "salary_range": {
+              "type": ["object", "null"],
+              "properties": {
+                "min": { "type": ["number", "null"] },
+                "max": { "type": ["number", "null"] }
+              }
+            },
+            "salary_note": { "type": ["string", "null"] }
+          }
+        },
+        "resume_baseline": {
+          "type": "object",
+          "properties": {
+            "master_resume_version": { "type": ["number", "string"] }
+          }
+        },
+        "tailoring_history": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "version": { "type": "string" },
+              "based_on": { "type": "string" },
+              "created_at": { "type": "string", "format": "date-time" },
+              "strategy": { "type": "string" },
+              "ats_score_after": { "type": "integer" },
+              "new_facts_used": { "type": "string" }
+            }
+          }
+        },
+        "scoring_history": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "round_number": { "type": "integer" },
+              "total_score": { "type": "integer" },
+              "recommendation": { "type": "string" },
+              "resume_version": { "type": "string" },
+              "scores": {
+                "type": "object",
+                "properties": {
+                  "formatting": { "type": "integer" },
+                  "tone_fit": { "type": "integer" },
+                  "hard_requirements": { "type": "integer" },
+                  "nice_to_haves": { "type": "integer" },
+                  "overall_fit": { "type": "integer" }
+                }
+              },
+              "timestamp": { "type": "string", "format": "date-time" },
+              "note": { "type": "string" }
+            }
+          }
+        },
+        "education_check": {
+          "type": ["object", "null"],
+          "description": "Reference to education-check.json output. Set when JD analysis flags a degree requirement."
+        },
+        "recruiter_evaluation": {
+          "type": ["object", "null"]
+        },
+        "cover_letter": {
+          "type": ["object", "null"]
+        },
+        "application_status": {
+          "type": "object",
+          "properties": {
+            "current_stage": {
+              "type": "string",
+              "enum": ["INTAKE", "JD_ANALYZED", "SCORING", "TAILORING", "EVALUATED", "COVER_LETTER", "READY", "SUBMITTED", "INTERVIEWING", "OFFER", "REJECTED", "WITHDRAWN", "GHOSTED"]
+            },
+            "submitted": { "type": "boolean" }
+          }
+        },
+        "interview_progress": {
+          "type": ["object", "null"],
+          "properties": {
+            "submitted_date": { "type": ["string", "null"] },
+            "current_round": { "type": ["string", "null"] },
+            "rounds": { "type": "array" },
+            "final_outcome": { "type": ["string", "null"] },
+            "outcome_date": { "type": ["string", "null"] },
+            "outcome_notes": { "type": ["string", "null"] },
+            "lessons_learned": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "user_notes": { "type": ["string", "null"] }
+      }
+    }
+  }
+}
