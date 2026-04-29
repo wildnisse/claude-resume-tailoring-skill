@@ -69,8 +69,8 @@ if [ -z "$USER_NAME" ]; then
   USER_NAME=$(prompt "Your name (used in resume filenames and templates)" "Jane Doe")
 fi
 
-# slugify name for default dir: lowercase, single hyphens
-NAME_SLUG=$(echo "$USER_NAME" | tr '[:upper:]' '[:lower:]' | sed -e 's/[^a-z0-9]\+/-/g' -e 's/^-//' -e 's/-$//')
+# slugify name for default dir: lowercase, single hyphens. Portable across BSD and GNU sed.
+NAME_SLUG=$(echo "$USER_NAME" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '-' | sed -e 's/^-//' -e 's/-$//')
 
 DEFAULT_DATA_DIR="$HOME/Documents/${NAME_SLUG}-jobsearch"
 DATA_DIR="${SKILL_DATA_DIR:-}"
