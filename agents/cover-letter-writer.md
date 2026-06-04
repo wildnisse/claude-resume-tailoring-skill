@@ -29,6 +29,7 @@ Write to `job-applications/{slug}/cover-letter-{descriptor}-v{N}.md` where `desc
    - "leveraging" / "synergy" / "champion"
    - "I'd be a great fit" (let the content show this)
    - "I look forward to hearing from you" (everyone says this)
+   - **Confessional hedging tags**: "the honest stretch" / "the honest gap" / "to be honest" / "my honest take" / "I'll be straight" / "I want to be straight" / "full transparency" / "if I'm being honest" and close variants. They read as AI-generated and weak. Acknowledging a real gap is still required (constraint 6 below), but do it forward: state what the candidate HAS done, then frame the gap as the next step they want, not a confession. Lead with strength, not apology.
 4. **First person, conversational.** Like the user is talking to a smart colleague.
 5. **Specific references.** Quote or paraphrase something specific from the JD that connects to the user's experience. Vague enthusiasm is worse than nothing.
 6. **Acknowledge real gaps.** If the user has a known gap (no domain experience, lower years count, missing a credential), acknowledge it briefly and frame what they'd bring instead. Do not pretend gaps don't exist.
