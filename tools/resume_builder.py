@@ -39,7 +39,7 @@ DEFAULT_STYLE = {
     "page_width_emu": 7772400,
     "page_height_emu": 10058400,
     "top_margin_emu": 409575,
-    "bottom_margin_emu": 914400,
+    "bottom_margin_emu": 457200,
     "left_margin_in": 0.75,
     "right_margin_in": 0.75,
 }
@@ -107,11 +107,6 @@ def add_role(
     subsection_bullets: list[str] | None = None,
     first: bool = True,
 ) -> None:
-    if not first:
-        sp_p = cell.add_paragraph()
-        sp_p.paragraph_format.space_after = Pt(6)
-        sp_p.paragraph_format.space_before = Pt(6)
-
     p_dates = cell.add_paragraph() if not first else cell.paragraphs[0]
     p_dates.clear()
     run_d = p_dates.add_run(dates)
@@ -119,8 +114,12 @@ def add_role(
     run_d.font.size = Pt(font_size_pt)
     run_d.font.bold = True
     pPr_d = p_dates._p.get_or_add_pPr()
+    # Space before each role (except the first) instead of an empty spacer
+    # paragraph — a spacer paragraph costs a full blank line plus padding,
+    # which adds up to over an inch of dead space on a long resume.
+    before = "160" if not first else "0"
     sp_d = parse_xml(
-        f'<w:spacing {nsdecls("w")} w:after="0" w:before="0" w:line="240" w:lineRule="auto"/>'
+        f'<w:spacing {nsdecls("w")} w:after="0" w:before="{before}" w:line="240" w:lineRule="auto"/>'
     )
     existing = pPr_d.find(qn("w:spacing"))
     if existing is not None:
@@ -316,8 +315,6 @@ def build_resume(content: dict[str, Any], style: dict[str, Any], output_path: Pa
 
     # ── EDUCATION ─────────────────────────────────────────────────────────────
     if content.get("education"):
-        doc.add_paragraph().paragraph_format.space_after = Pt(4)
-
         edu_header = doc.add_paragraph()
         run_edu_h = edu_header.add_run("EDUCATION")
         run_edu_h.font.name = style["font"]
@@ -330,7 +327,7 @@ def build_resume(content: dict[str, Any], style: dict[str, Any], output_path: Pa
             "</w:pBdr>"
         )
         pPr_edu.append(pBdr_edu)
-        sp_edu = parse_xml(f'<w:spacing {nsdecls("w")} w:after="80" w:before="0"/>')
+        sp_edu = parse_xml(f'<w:spacing {nsdecls("w")} w:after="80" w:before="160"/>')
         pPr_edu.append(sp_edu)
 
         edu_table = doc.add_table(rows=1, cols=2)
@@ -342,18 +339,16 @@ def build_resume(content: dict[str, Any], style: dict[str, Any], output_path: Pa
 
         for i, edu in enumerate(content["education"]):
             if i == 0:
-                p_inst = edu_cell.paragraphs[0]
+                p_edu = edu_cell.paragraphs[0]
             else:
-                p_inst = edu_cell.add_paragraph()
-            run_inst = p_inst.add_run(edu["institution"])
-            run_inst.font.name = style["font"]
-            run_inst.font.size = Pt(style["font_size_pt"])
-
-            p_deg = edu_cell.add_paragraph()
-            run_deg = p_deg.add_run(edu["degree"])
+                p_edu = edu_cell.add_paragraph()
+            run_deg = p_edu.add_run(edu["degree"])
             run_deg.font.name = style["font"]
             run_deg.font.size = Pt(style["font_size_pt"])
-            run_deg.font.italic = True
+            run_deg.font.bold = True
+            run_inst = p_edu.add_run(f", {edu['institution']}")
+            run_inst.font.name = style["font"]
+            run_inst.font.size = Pt(style["font_size_pt"])
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     doc.save(str(output_path))
