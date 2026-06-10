@@ -49,6 +49,7 @@ For each JD, identify:
 - **Hero role**: which role in the user's history maps most directly to this JD? Lead the experience section with it. Lead the summary with the most relevant proof points from this role.
 - **Supporting roles**: roles that demonstrate the must-haves but aren't direct domain matches. Trim their bullets to highlight the relevant aspects.
 - **Credibility roles**: older or less relevant roles. Keep them but with minimal bullets so the timeline is complete without distracting.
+- **Earlier roles**: the oldest career entries compress into an "Earlier roles" block (title, company, years, at most one line each) rather than dropping off the resume. A visible career start keeps the years-of-experience claim verifiable.
 - **Reframing**: same fact, different emphasis. e.g. "scaled team from 8 to 40" vs "increased output without adding headcount" — both can be true of the same role; pick the framing the JD wants.
 
 ## Section-by-section guidance
@@ -81,7 +82,7 @@ If the user's `CLAUDE.md` specifies a particular style (font, layout, etc.), res
 - Name: 22pt
 - Summary background shading: light gray (EDEDED)
 - Three-column highlights with small caps headers
-- Single-page format (target)
+- Length per `STYLE.md`: two pages standard for leadership resumes, never more; no dangling near-empty second page. Check the page count the build step reports and rebalance if needed.
 
 ## Common failure modes to avoid
 

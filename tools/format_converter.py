@@ -77,6 +77,24 @@ def convert_docx_to_pdf(docx_path: Path, output_dir: Path) -> Path:
     return expected_pdf
 
 
+def count_pdf_pages(pdf_path: Path) -> int | None:
+    """Best-effort page count: pypdf if available, else a byte-level scan."""
+    try:
+        from pypdf import PdfReader  # type: ignore
+
+        return len(PdfReader(str(pdf_path)).pages)
+    except ImportError:
+        pass
+    try:
+        data = pdf_path.read_bytes()
+        # Page objects are "/Type /Page"; the page-tree root is "/Type /Pages".
+        import re
+
+        return len(re.findall(rb"/Type\s*/Page[^s]", data))
+    except OSError:
+        return None
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Convert docx to pdf using LibreOffice")
     parser.add_argument("--input", required=True, type=Path, help="Input docx file")
@@ -92,7 +110,17 @@ def main() -> int:
 
     try:
         pdf = convert_docx_to_pdf(args.input, output_dir)
-        print(f"Saved: {pdf}")
+        pages = count_pdf_pages(pdf)
+        if pages is None:
+            print(f"Saved: {pdf} (page count unavailable)")
+        else:
+            print(f"Saved: {pdf} ({pages} page{'s' if pages != 1 else ''})")
+            if pages > 2:
+                print(
+                    f"WARNING: {pages} pages. Resumes should be 1-2 pages; "
+                    "trim content or rebalance (see STYLE.md length rules).",
+                    file=sys.stderr,
+                )
         return 0
     except Exception as e:
         print(f"ERROR: {e}", file=sys.stderr)

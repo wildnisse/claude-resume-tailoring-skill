@@ -12,6 +12,8 @@ Authenticity enforcement and orchestration overhaul, driven by a full-corpus aud
 - Altitude rules: VP+ resumes lead with org/business outcomes, never stack enumeration or IDE plugin names
 - Cover letter freshness rules: no fixed skeleton, rotate proof points and closers, read recent letters before drafting
 - Echo evidence requirement: the ATS scorer must quote candidate/JD phrase pairs (or the comparisons it ran) before asserting "no echoes"
+- Length rules in `STYLE.md`: single-page constraint retired; two pages is the standard for leadership resumes, early-career roles return as a compact "Earlier roles" block, no dangling near-empty second page
+- `format_converter.py` reports the PDF page count after conversion (warns above two pages)
 
 ### Changed
 - Pipeline orchestration: ATS scorer and recruiter evaluator MUST run as fresh subagents that never see the tailoring conversation (a scorer that watched the resume being written cannot be adversarial toward it); JD analysis + education check run in parallel; post-tailor build/score/letter run in parallel; KB gap questions are batched into one ask

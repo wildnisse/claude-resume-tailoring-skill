@@ -46,6 +46,16 @@ Match the resume's vocabulary to the level of the role. This matters most ABOVE 
 - **Director and below / player-coach roles**: technical specificity is an asset. Hands-on currency, real tools, real architecture decisions.
 - **Down-level applications** (candidate applying below their proven scope): do not flag or apologize for overqualification in the resume. Frame as deliberate (hands-on by choice). Prepare the commitment story for the screen instead.
 
+## Length
+
+There is no single-page rule. Resume length follows seniority:
+
+- **Under ~10 years of experience**: one page.
+- **10+ years, or any leadership resume**: two pages is the standard, and forcing one page is itself a signal (it reads junior, and it forces cutting career history that recruiters expect to see). Use the room for a complete timeline rather than denser text.
+- **Never more than two pages.** Past two, cut.
+- **Early-career roles belong on the resume**, compressed, not omitted. A career that visibly starts mid-seniority invites timeline questions. Use a compact "Earlier roles" block at the end of experience: title, company, years, with at most one line each (often none). This keeps 25 years of history honest in 4-6 lines.
+- **No dangling pages.** A second page with three lines on it is worse than either length. The build step reports the PDF page count; if page two is under roughly a third full, rebalance (expand the hero role, restore an earlier-roles block, or trim back to one page deliberately).
+
 ## Numbers
 
 - Use the candidate's verified metrics from `experience-kb.json`, identically, everywhere. Consistency across applications is what truth looks like and it survives reference checks.
