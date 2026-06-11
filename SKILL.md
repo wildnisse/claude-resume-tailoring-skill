@@ -71,6 +71,21 @@ Run the pipeline with maximum parallelism between independent steps, and with sc
 
 For programmatic invocation, `python skill/tools/pipeline.py --jd path/to/raw-jd.txt --slug company-role-year` handles file layout and commit; the agent steps follow this same sequence.
 
+### Model selection per agent
+
+Match the model to the work. When spawning subagents (Agent tool `model` parameter or equivalent):
+
+| Agent | Model | Why |
+|---|---|---|
+| jd-analyzer | sonnet | Structured extraction against a schema |
+| education-requirements-check | sonnet | Pattern classification |
+| ats-scorer (all rounds) | sonnet | Rubric application with citations; speed matters because it runs 2-3 times per application |
+| recruiter-evaluator | sonnet | Structured judgment against defined tracks |
+| resume-tailor | default (inherit) | Quality-critical writing; voice and judgment |
+| cover-letter-writer | default (inherit) | Quality-critical writing; the most-read artifact |
+
+The scorer and evaluator prompts are rubric-driven and evidence-gated (echo evidence, citations, lint reconciliation), which holds quality on a faster model; the deterministic lint backstops them. If a sonnet scorer produces a score that conflicts with the lint report or asserts unevidenced conclusions, re-run that one scoring pass on the default model.
+
 ### Independent scoring (critical)
 
 The ATS scorer and recruiter evaluator MUST run as fresh subagents whose context contains ONLY: the artifact being scored (resume content / docx text / cover letter), the JD analysis, `experience-kb.json`, `STYLE.md`, and the user's `CLAUDE.md`. They must NOT see the tailoring conversation, the tailor's reasoning, or prior score rationale. A scorer that watched the resume being written cannot be adversarial toward it; it will rationalize the choices it saw justified. If subagent isolation is not available in the current environment, say so explicitly in the score output (`"independence": false`) so the user knows the score is soft.
