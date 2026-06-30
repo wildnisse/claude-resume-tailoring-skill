@@ -160,22 +160,27 @@ def texts_from_resume_content(path):
     return "\n".join(chunks)
 
 
-def prose_from_resume_content(path):
-    """Human-written prose only: summary + highlight/experience bullets.
+def prose_from_resume_content(path, include_highlights=True):
+    """Human-written prose: summary + experience bullets (+ highlights).
 
     Excludes titles, company/location, dates, section headers, and education —
     structured fields that legitimately repeat (three 'Director' titles is a
-    fact, not a tell) and are not where sentence-level AI tells live. The
-    prose-mechanic checks run on THIS, while banned-phrase and echo checks run
-    on the full text.
+    fact, not a tell) and are not where sentence-level AI tells live.
+
+    The highlights block is a deliberate condensed restatement of the bullets,
+    so set include_highlights=False for the repetition/opener checks (otherwise
+    every highlight-echoes-a-bullet pair is a false positive). The cadence,
+    coda, and diction checks DO include highlights (a florid or triple-stuffed
+    highlight is still a tell).
     """
     data = json.loads(path.read_text())
     chunks = []
     summary = data.get("summary")
     if isinstance(summary, str) and summary.strip():
         chunks.append(summary.strip())
-    for col in (data.get("highlights") or {}).get("columns", []) or []:
-        chunks += [b for b in (col.get("bullets") or []) if isinstance(b, str)]
+    if include_highlights:
+        for col in (data.get("highlights") or {}).get("columns", []) or []:
+            chunks += [b for b in (col.get("bullets") or []) if isinstance(b, str)]
     for role in data.get("experience", []) or []:
         chunks += [b for b in (role.get("bullets") or []) if isinstance(b, str)]
         sub = role.get("subsection") or {}
@@ -192,20 +197,22 @@ def gather_artifacts(app_dir):
     SUPPOSED to be identical across applications (consistency is what truth
     looks like); only letters and summaries must be written fresh.
     """
-    all_texts, fresh_texts, prose_texts = {}, {}, {}
+    all_texts, fresh_texts, prose_texts, narrative_texts = {}, {}, {}, {}
     for md in sorted(app_dir.glob("cover-letter-*.md")):
         text = md.read_text()
-        all_texts[md.name] = fresh_texts[md.name] = prose_texts[md.name] = text
+        all_texts[md.name] = fresh_texts[md.name] = text
+        prose_texts[md.name] = narrative_texts[md.name] = text
     for rc in sorted(app_dir.glob("resume-content*.json")):
         try:
             all_texts[rc.name] = texts_from_resume_content(rc)
             prose_texts[rc.name] = prose_from_resume_content(rc)
+            narrative_texts[rc.name] = prose_from_resume_content(rc, include_highlights=False)
             summary = json.loads(rc.read_text()).get("summary")
             if isinstance(summary, str) and summary.strip():
                 fresh_texts[f"{rc.name}:summary"] = summary
         except (json.JSONDecodeError, OSError):
             pass
-    return all_texts, fresh_texts, prose_texts
+    return all_texts, fresh_texts, prose_texts, narrative_texts
 
 
 # --- Checks ---------------------------------------------------------------
@@ -356,9 +363,12 @@ def check_summary(label, summary):
     return findings
 
 
-# Prose-mechanic checks that run on every lintable artifact's text.
-PROSE_CHECKS = (check_rule_of_three, check_closing_appositive,
-                check_intra_repetition, check_repeated_openers, check_diction)
+# Cadence/coda/diction run on full prose (highlights included — a florid or
+# triple-stuffed highlight is still a tell). Repetition/opener run on the
+# narrative only (highlights deliberately restate bullets; counting that
+# overlap would be a false positive on every resume).
+CADENCE_CHECKS = (check_rule_of_three, check_closing_appositive, check_diction)
+REPETITION_CHECKS = (check_intra_repetition, check_repeated_openers)
 
 
 # --- Main -----------------------------------------------------------------
@@ -370,7 +380,7 @@ def lint_application(repo, slug):
         print(f"error: no such application dir: {app_dir}", file=sys.stderr)
         return None
 
-    artifacts, fresh, prose = gather_artifacts(app_dir)
+    artifacts, fresh, prose, narrative = gather_artifacts(app_dir)
     if not artifacts:
         print(f"error: no lintable artifacts in {app_dir}", file=sys.stderr)
         return None
@@ -381,7 +391,7 @@ def lint_application(repo, slug):
     other_apps = {}
     for other in (repo / "job-applications").iterdir():
         if other.is_dir() and other.name != slug:
-            _, other_fresh, _ = gather_artifacts(other)
+            _, other_fresh, _, _ = gather_artifacts(other)
             if other_fresh:
                 other_apps[other.name] = other_fresh
 
@@ -392,7 +402,10 @@ def lint_application(repo, slug):
         if jd_text:
             errors += check_jd_echo(label, text, jd_text)
     for label, text in prose.items():
-        for chk in PROSE_CHECKS:
+        for chk in CADENCE_CHECKS:
+            warnings += chk(label, text)
+    for label, text in narrative.items():
+        for chk in REPETITION_CHECKS:
             warnings += chk(label, text)
     for label, text in fresh.items():
         if label.endswith(":summary"):
@@ -415,17 +428,20 @@ def lint_single_file(path, jd_path):
     if path.suffix == ".json":
         full = texts_from_resume_content(path)
         prose = prose_from_resume_content(path)
+        narrative = prose_from_resume_content(path, include_highlights=False)
         try:
             summary = json.loads(path.read_text()).get("summary") or ""
         except (json.JSONDecodeError, OSError):
             summary = ""
     else:
-        full = prose = path.read_text()
+        full = prose = narrative = path.read_text()
     label = path.name
     errors = check_banned(label, full)
     warnings = check_overused(label, full)
-    for chk in PROSE_CHECKS:
+    for chk in CADENCE_CHECKS:
         warnings += chk(label, prose)
+    for chk in REPETITION_CHECKS:
+        warnings += chk(label, narrative)
     if summary.strip():
         warnings += check_summary(f"{label}:summary", summary)
     if jd_path:
