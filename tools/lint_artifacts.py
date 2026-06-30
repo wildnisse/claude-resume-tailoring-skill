@@ -20,6 +20,7 @@ import argparse
 import json
 import re
 import sys
+from collections import Counter
 from pathlib import Path
 
 # --- Rule definitions ----------------------------------------------------
@@ -46,6 +47,9 @@ BANNED_PHRASES = [
     "not as a demo",
     # unfalsifiable boost pairs
     "measurable, provable", "real, tangible", "concrete, demonstrable",
+    # balanced antithesis openers (workshopped "quotable" line — reads as written, not lived)
+    "equally at home", "equal parts", "as much at home", "as comfortable in",
+    "as happy in",
 ]
 
 # Regex rules: (name, pattern, explanation)
@@ -56,7 +60,33 @@ BANNED_PATTERNS = [
     ("champion-verb",
      re.compile(r"\bchampion(ed|ing|s)?\b", re.IGNORECASE),
      "'champion' family is banned"),
+    ("antithesis-part-x-part-y",
+     re.compile(r"\bpart\s+\w+,\s*part\s+\w+", re.IGNORECASE),
+     "Balanced 'Part X, part Y' antithesis opener — reads as written, not lived (STYLE.md)"),
 ]
+
+# --- Sentence-level AI tells (STYLE.md "Sentence-level AI tells") ----------
+# Heuristic and density-based, so these WARN rather than error.
+
+# Elevated / literary diction that reads as generated in an engineer's resume.
+LITERARY_DICTION = re.compile(
+    r"\b(estate|tapestry|realm|ethos|crucible|bedrock|linchpin|storied|deftly|"
+    r"seamless(?:ly)?|myriad|plethora|pivotal|underpin(?:s|ned|ning)?|"
+    r"harness(?:es|ing)?|unlock(?:s|ing)?|elevate(?:s|d)?|elevating)\b",
+    re.IGNORECASE)
+
+# "A, B, and C" three-item list (Oxford-comma triple or longer). The tell is
+# DENSITY: one or two is human, five in a document is a model.
+RULE_OF_THREE = re.compile(r",[^,.;:\n]+,\s+(?:and|or|as well as)\b")
+RULE_OF_THREE_LIMIT = 5
+
+# Trailing value-restating coda: "..., the X the business ran on" / "..., with Y".
+SENTENCE_SPLIT = re.compile(r"[.\n]+")
+APPOSITIVE_LEAD = re.compile(r"^(?:the|with|a|an|\w+ing)\b", re.IGNORECASE)
+CLOSING_APPOSITIVE_LIMIT = 2
+
+SUMMARY_WORD_LIMIT = 75
+SUMMARY_SENTENCE_LIMIT = 4
 
 # Closers that are worn out across the corpus; warn, don't fail.
 OVERUSED_CLOSERS = ["happy to talk", "i would welcome a conversation"]
@@ -130,6 +160,29 @@ def texts_from_resume_content(path):
     return "\n".join(chunks)
 
 
+def prose_from_resume_content(path):
+    """Human-written prose only: summary + highlight/experience bullets.
+
+    Excludes titles, company/location, dates, section headers, and education —
+    structured fields that legitimately repeat (three 'Director' titles is a
+    fact, not a tell) and are not where sentence-level AI tells live. The
+    prose-mechanic checks run on THIS, while banned-phrase and echo checks run
+    on the full text.
+    """
+    data = json.loads(path.read_text())
+    chunks = []
+    summary = data.get("summary")
+    if isinstance(summary, str) and summary.strip():
+        chunks.append(summary.strip())
+    for col in (data.get("highlights") or {}).get("columns", []) or []:
+        chunks += [b for b in (col.get("bullets") or []) if isinstance(b, str)]
+    for role in data.get("experience", []) or []:
+        chunks += [b for b in (role.get("bullets") or []) if isinstance(b, str)]
+        sub = role.get("subsection") or {}
+        chunks += [b for b in (sub.get("bullets") or []) if isinstance(b, str)]
+    return "\n".join(chunks)
+
+
 def gather_artifacts(app_dir):
     """Return (all_texts, fresh_texts) for one application dir.
 
@@ -139,18 +192,20 @@ def gather_artifacts(app_dir):
     SUPPOSED to be identical across applications (consistency is what truth
     looks like); only letters and summaries must be written fresh.
     """
-    all_texts, fresh_texts = {}, {}
+    all_texts, fresh_texts, prose_texts = {}, {}, {}
     for md in sorted(app_dir.glob("cover-letter-*.md")):
-        all_texts[md.name] = fresh_texts[md.name] = md.read_text()
+        text = md.read_text()
+        all_texts[md.name] = fresh_texts[md.name] = prose_texts[md.name] = text
     for rc in sorted(app_dir.glob("resume-content*.json")):
         try:
             all_texts[rc.name] = texts_from_resume_content(rc)
+            prose_texts[rc.name] = prose_from_resume_content(rc)
             summary = json.loads(rc.read_text()).get("summary")
             if isinstance(summary, str) and summary.strip():
                 fresh_texts[f"{rc.name}:summary"] = summary
         except (json.JSONDecodeError, OSError):
             pass
-    return all_texts, fresh_texts
+    return all_texts, fresh_texts, prose_texts
 
 
 # --- Checks ---------------------------------------------------------------
@@ -200,6 +255,112 @@ def check_cross_app(label, text, other_apps):
     return findings
 
 
+# --- Sentence-level AI-tell checks (warnings) ----------------------------
+
+
+def split_sentences(text):
+    return [s.strip() for s in SENTENCE_SPLIT.split(text) if len(s.split()) >= 4]
+
+
+def check_rule_of_three(label, text):
+    """Relentless three-item lists are the clearest machine cadence."""
+    triples = [m.group(0).strip(" ,") for m in RULE_OF_THREE.finditer(text)]
+    if len(triples) < RULE_OF_THREE_LIMIT:
+        return []
+    sample = "; ".join(t[:48] for t in triples[:4])
+    return [{"check": "rule-of-three", "artifact": label,
+             "detail": f"{len(triples)} three-item lists — the machine cadence; vary list "
+                       f"length (cut to two, push to four, restructure). e.g. {sample!r}"}]
+
+
+def check_closing_appositive(label, text):
+    """Trailing comma + value-restating coda: the signature LLM sentence shape."""
+    flagged = []
+    for s in split_sentences(text):
+        if "," not in s:
+            continue
+        tail = s.rsplit(",", 1)[1].strip().rstrip(".")
+        if "," in tail or len(tail.split()) < 4:
+            continue
+        if tail.split()[0].lower() in ("and", "or", "but", "plus", "including", "so"):
+            continue
+        if APPOSITIVE_LEAD.match(tail):
+            flagged.append(tail)
+    if len(flagged) < CLOSING_APPOSITIVE_LIMIT:
+        return []
+    sample = "; ".join(t[:55] for t in flagged[:3])
+    return [{"check": "closing-appositive", "artifact": label,
+             "detail": f"{len(flagged)} sentences end with a value-restating coda — "
+                       f"state the fact and stop. e.g. {sample!r}"}]
+
+
+def check_intra_repetition(label, text):
+    """A distinctive phrase repeated within one document — say it once."""
+    words = normalize_words(text)
+    repeated = []
+    for n, minct in ((4, 2), (3, 2), (2, 3)):
+        counts = Counter(" ".join(words[i:i + n]) for i in range(len(words) - n + 1))
+        for gram, ct in counts.items():
+            ws = gram.split()
+            if ct >= minct and sum(1 for w in ws if w not in STOPWORDS) >= max(2, n // 2):
+                repeated.append((gram, ct))
+    grams = [g for g, _ in repeated]
+    kept = [(g, ct) for g, ct in repeated if not any(g != h and g in h for h in grams)]
+    kept.sort(key=lambda x: (-len(x[0].split()), -x[1]))
+    if not kept:
+        return []
+    shown = "; ".join(f"{g!r}×{ct}" for g, ct in kept[:5])
+    return [{"check": "intra-repetition", "artifact": label,
+             "detail": f"phrase repeated within the document — say it once: {shown}"}]
+
+
+def check_repeated_openers(label, text):
+    """Bullets that all start with the same verb read as templated."""
+    firsts = Counter()
+    for line in text.split("\n"):
+        toks = line.split()
+        if len(toks) < 4:
+            continue
+        w = re.sub(r"[^a-z]", "", toks[0].lower())
+        if len(w) >= 3 and w not in STOPWORDS:
+            firsts[w] += 1
+    rep = sorted([(w, c) for w, c in firsts.items() if c >= 3], key=lambda x: -x[1])
+    if not rep:
+        return []
+    detail = ", ".join(f"{w!r}×{c}" for w, c in rep)
+    return [{"check": "repeated-opener", "artifact": label,
+             "detail": f"bullets reuse the same opening word — vary them: {detail}"}]
+
+
+def check_diction(label, text):
+    hits = sorted({m.group(0).lower() for m in LITERARY_DICTION.finditer(text)})
+    if not hits:
+        return []
+    return [{"check": "literary-diction", "artifact": label,
+             "detail": "elevated/literary diction, use the plain word: "
+                       + ", ".join(repr(h) for h in hits)}]
+
+
+def check_summary(label, summary):
+    findings = []
+    nwords = len(summary.split())
+    nsent = len([s for s in re.split(r"[.!?]+", summary) if s.strip()])
+    if nwords > SUMMARY_WORD_LIMIT:
+        findings.append({"check": "summary-length", "artifact": label,
+                         "detail": f"summary is {nwords} words; keep it under ~{SUMMARY_WORD_LIMIT} — "
+                                   "a dense, keyword-stuffed summary reads as generated and gets skipped"})
+    if nsent > SUMMARY_SENTENCE_LIMIT:
+        findings.append({"check": "summary-density", "artifact": label,
+                         "detail": f"summary is {nsent} sentences; keep it to "
+                                   f"{SUMMARY_SENTENCE_LIMIT}, identity not catalog"})
+    return findings
+
+
+# Prose-mechanic checks that run on every lintable artifact's text.
+PROSE_CHECKS = (check_rule_of_three, check_closing_appositive,
+                check_intra_repetition, check_repeated_openers, check_diction)
+
+
 # --- Main -----------------------------------------------------------------
 
 
@@ -209,7 +370,7 @@ def lint_application(repo, slug):
         print(f"error: no such application dir: {app_dir}", file=sys.stderr)
         return None
 
-    artifacts, fresh = gather_artifacts(app_dir)
+    artifacts, fresh, prose = gather_artifacts(app_dir)
     if not artifacts:
         print(f"error: no lintable artifacts in {app_dir}", file=sys.stderr)
         return None
@@ -220,7 +381,7 @@ def lint_application(repo, slug):
     other_apps = {}
     for other in (repo / "job-applications").iterdir():
         if other.is_dir() and other.name != slug:
-            _, other_fresh = gather_artifacts(other)
+            _, other_fresh, _ = gather_artifacts(other)
             if other_fresh:
                 other_apps[other.name] = other_fresh
 
@@ -230,7 +391,12 @@ def lint_application(repo, slug):
         warnings += check_overused(label, text)
         if jd_text:
             errors += check_jd_echo(label, text, jd_text)
+    for label, text in prose.items():
+        for chk in PROSE_CHECKS:
+            warnings += chk(label, text)
     for label, text in fresh.items():
+        if label.endswith(":summary"):
+            warnings += check_summary(label, text)
         warnings += check_cross_app(label, text, other_apps)
 
     report = {
@@ -245,12 +411,25 @@ def lint_application(repo, slug):
 
 
 def lint_single_file(path, jd_path):
-    text = path.read_text()
+    summary = ""
+    if path.suffix == ".json":
+        full = texts_from_resume_content(path)
+        prose = prose_from_resume_content(path)
+        try:
+            summary = json.loads(path.read_text()).get("summary") or ""
+        except (json.JSONDecodeError, OSError):
+            summary = ""
+    else:
+        full = prose = path.read_text()
     label = path.name
-    errors = check_banned(label, text)
-    warnings = check_overused(label, text)
+    errors = check_banned(label, full)
+    warnings = check_overused(label, full)
+    for chk in PROSE_CHECKS:
+        warnings += chk(label, prose)
+    if summary.strip():
+        warnings += check_summary(f"{label}:summary", summary)
     if jd_path:
-        errors += check_jd_echo(label, text, Path(jd_path).read_text())
+        errors += check_jd_echo(label, full, Path(jd_path).read_text())
     return {"artifacts_checked": [label], "pass": not errors,
             "errors": errors, "warnings": warnings}
 
