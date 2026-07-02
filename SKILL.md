@@ -54,7 +54,7 @@ Run the pipeline with maximum parallelism between independent steps, and with sc
 
 **Stage 1 — parse (parallel).** `agents/jd-analyzer.md` and `agents/education-requirements-check.md` both read only the raw JD. Run them concurrently as subagents. If the education check returns `user_action_required: true`, stop and surface it before any further work.
 
-**Stage 2 — baseline score.** Run `agents/ats-scorer.md` (round 1) against the master resume, as an independent subagent.
+**Stage 2 — baseline score.** Run `agents/ats-scorer.md` (round 1) against the master resume, as an independent subagent. Round 1 is coverage-focused: echo/pandering analysis is skipped (the untailored master predates the JD) and the effort goes to hard requirements, red flags, and gap questions.
 
 **Stage 3 — gap discovery (batched).** Collect ALL knowledge-base gap questions surfaced by round 1 into a single batched question to the user. Do not drip questions one at a time. Update `experience-kb.json` with anything the user confirms before tailoring begins.
 
@@ -88,7 +88,7 @@ The scorer and evaluator prompts are rubric-driven and evidence-gated (echo evid
 
 ### Independent scoring (critical)
 
-The ATS scorer and recruiter evaluator MUST run as fresh subagents whose context contains ONLY: the artifact being scored (resume content / docx text / cover letter), the JD analysis, `experience-kb.json`, `STYLE.md`, and the user's `CLAUDE.md`. They must NOT see the tailoring conversation, the tailor's reasoning, or prior score rationale. A scorer that watched the resume being written cannot be adversarial toward it; it will rationalize the choices it saw justified. If subagent isolation is not available in the current environment, say so explicitly in the score output (`"independence": false`) so the user knows the score is soft.
+The ATS scorer and recruiter evaluator MUST run as fresh subagents whose context contains ONLY: the artifact being scored (resume content / docx text / cover letter), the JD analysis, the KB view from `python skill/tools/kb_view.py` (never the full `experience-kb.json` — its session notes and gap strategy are tailoring rationale, and roughly half the file's tokens), `STYLE.md`, and the user's `CLAUDE.md`. They must NOT see the tailoring conversation, the tailor's reasoning, or prior score rationale. A scorer that watched the resume being written cannot be adversarial toward it; it will rationalize the choices it saw justified. If subagent isolation is not available in the current environment, say so explicitly in the score output (`"independence": false`) so the user knows the score is soft.
 
 ### Enforcement gates
 

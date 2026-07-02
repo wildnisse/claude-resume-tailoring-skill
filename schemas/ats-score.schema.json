@@ -2,9 +2,10 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/wildnisse/claude-resume-tailoring-skill/schemas/ats-score.schema.json",
   "title": "ATS Score",
-  "description": "Output of the ats-scorer agent. 100-point rubric across 5 dimensions.",
+  "description": "Output of the ats-scorer agent. 100-point rubric across 5 dimensions. Keep it terse: assessments <=2 sentences, evidence <=25 words, whole file under ~6KB.",
   "type": "object",
-  "required": ["candidate_name", "job_title", "company", "analysis_date", "scores", "total_score", "recommendation"],
+  "required": ["candidate_name", "job_title", "company", "analysis_date", "independence", "echo_check", "scores", "total_score", "recommendation"],
+  "additionalProperties": false,
   "properties": {
     "candidate_name": { "type": "string" },
     "job_title": { "type": "string" },
@@ -12,7 +13,35 @@
     "analysis_date": { "type": "string", "format": "date-time" },
     "resume_version": {
       "type": "string",
-      "description": "Which resume version was scored (e.g. 'jmresume_v2 (master, untailored)' or 'jmonstad-vp-v1')."
+      "description": "Which resume version was scored (e.g. 'vp-cto-full-content.json (master, untailored)' or 'joakim-monstad-director-v2')."
+    },
+    "independence": {
+      "type": "boolean",
+      "description": "True only if the scorer ran in a fresh context that never saw the tailoring conversation."
+    },
+    "independence_note": {
+      "type": "string",
+      "description": "Required when independence is false: what leaked."
+    },
+    "echo_check": {
+      "description": "Round 2+: candidate-phrase/JD-phrase pairs found (incl. paraphrases), or the summary sentences and headers compared. Round 1: 'n/a: untailored master'.",
+      "type": ["string", "array", "object"]
+    },
+    "lint_reconciliation": {
+      "type": "string",
+      "description": "One or two sentences reconciling with lint-report.json, when one exists."
+    },
+    "consistency_checks": {
+      "type": "array",
+      "maxItems": 6,
+      "items": { "type": "string" },
+      "description": "Timeline/KB-mismatch/tenure findings, one line each. Empty array if clean."
+    },
+    "gap_questions": {
+      "type": "array",
+      "maxItems": 6,
+      "items": { "type": "string" },
+      "description": "Round 1: targeted questions for the orchestrator to batch to the user."
     },
     "scores": {
       "type": "object",
@@ -22,14 +51,21 @@
           "type": "object",
           "properties": {
             "score": { "type": "integer", "minimum": 0, "maximum": 20 },
-            "assessment": { "type": "string" }
+            "assessment": { "type": "string", "description": "<=2 sentences. One sentence for the untailored master." }
           }
         },
         "tone_fit_alignment": {
           "type": "object",
           "properties": {
             "score": { "type": "integer", "minimum": 0, "maximum": 20 },
-            "assessment": { "type": "string" }
+            "raw_score": { "type": "integer", "minimum": 0, "maximum": 20 },
+            "deductions": {
+              "type": "array",
+              "maxItems": 4,
+              "items": { "type": "string" },
+              "description": "Each applied penalty: name, points, one-line evidence."
+            },
+            "assessment": { "type": "string", "description": "<=2 sentences." }
           }
         },
         "hard_requirements_match": {
@@ -44,7 +80,7 @@
                 "properties": {
                   "requirement": { "type": "string" },
                   "status": { "type": "string", "enum": ["exact", "strong", "partial", "weak", "missing"] },
-                  "evidence": { "type": "string" }
+                  "evidence": { "type": "string", "description": "ONE quote fragment with role+year, <=25 words, or 'MISSING: <requirement>'." }
                 }
               }
             }
@@ -54,15 +90,15 @@
           "type": "object",
           "properties": {
             "score": { "type": "integer", "minimum": 0, "maximum": 20 },
-            "assessment": { "type": "string" }
+            "assessment": { "type": "string", "description": "<=2 sentences." }
           }
         },
         "overall_fit_recommendation": {
           "type": "object",
           "properties": {
             "score": { "type": "integer", "minimum": 0, "maximum": 10 },
-            "red_flags": { "type": "array", "items": { "type": "string" } },
-            "green_flags": { "type": "array", "items": { "type": "string" } }
+            "red_flags": { "type": "array", "maxItems": 5, "items": { "type": "string" } },
+            "green_flags": { "type": "array", "maxItems": 5, "items": { "type": "string" } }
           }
         }
       }
@@ -72,10 +108,11 @@
       "type": "string",
       "enum": ["READY_FOR_SUBMISSION", "NEEDS_TAILORING", "WEAK_MATCH"]
     },
-    "strengths": { "type": "array", "items": { "type": "string" } },
-    "critical_issues": { "type": "array", "items": { "type": "string" } },
+    "strengths": { "type": "array", "maxItems": 5, "items": { "type": "string" } },
+    "critical_issues": { "type": "array", "maxItems": 5, "items": { "type": "string" } },
     "priority_fixes": {
       "type": "array",
+      "maxItems": 3,
       "items": {
         "type": "object",
         "properties": {
@@ -88,6 +125,8 @@
     },
     "tailoring_suggestions": {
       "type": "array",
+      "maxItems": 5,
+      "description": "Omit entirely when total_score >= 75.",
       "items": {
         "type": "object",
         "properties": {

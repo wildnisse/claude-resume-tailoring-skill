@@ -2,6 +2,24 @@
 
 All notable changes to this skill will be documented in this file.
 
+## [0.4.0] - 2026-07-02
+
+ATS scorer slimmed for token cost, runtime, and score discrimination. Funnel data showed the score was not predicting responses while each run burned ~30k input tokens on the full KB and produced 20-30KB score files.
+
+### Added
+- `tools/kb_view.py`: independence-safe KB view for the scorer and evaluator. Drops `tailoring_session_notes` and `gap_presentation_strategy` (tailoring rationale an independent judge must not see, and ~half the file's tokens).
+- Round types in the scorer: round 1 against the untailored master skips echo/pandering analysis (the master predates the JD) and spends effort on requirements coverage, red flags, and gap questions.
+- Full-range scoring guidance: a competent-but-unremarkable fit is 55-65, not 75; 80+ reserved for near-lock fits; identical scores across different JDs means the scoring failed.
+- Overall-fit now explicitly weighs recent scope vs role altitude (the strongest observed response predictor) instead of leaving level fit entirely to the evaluator.
+- Schema legitimizes the fields the prompt already demanded (`independence`, `echo_check`, `consistency_checks`, `lint_reconciliation`, `gap_questions`).
+
+### Changed
+- `agents/ats-scorer.md` rewritten at a third the size; AI-tell taxonomy no longer duplicated from `STYLE.md` (the scorer reads STYLE.md anyway).
+- Hard output caps: assessments ≤2 sentences, per-requirement evidence ≤25 words (one quote fragment + role/year), max 3 priority fixes, `tailoring_suggestions` omitted at ≥75, whole score file targeted under 6KB.
+- Schema sets `additionalProperties: false` and array caps — no more freelance fields (`bottom_line`, `delta_from_round_1`, `tailoring_ceiling`).
+- Rubric weights unchanged (20/20/30/20/10) so historical scores stay roughly comparable, but round-1 baselines will read a few points different now that echo penalties no longer apply to the master.
+- `recruiter-evaluator.md` and `SKILL.md` point at the KB view instead of the raw KB.
+
 ## [0.2.0] - 2026-06-10
 
 Authenticity enforcement and orchestration overhaul, driven by a full-corpus audit that found cross-application AI tells the per-application checks missed.
